@@ -8,10 +8,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,6 +47,7 @@ class HomePage : ComponentActivity() {
         }
     }
 }
+@OptIn(androidx.compose.runtime.InternalComposeApi::class)
 
 @Composable
 fun HomePageFun(name: String) {
@@ -107,7 +110,7 @@ fun SpeakButton() {
 
     Card(
         onClick = {
-            val intent = Intent(context, TranslateActivity::class.java)
+            val intent = Intent(context, UserActivity::class.java)
             context.startActivity(intent)
         },
         shape = RoundedCornerShape(200.dp),
@@ -122,7 +125,7 @@ fun SpeakButton() {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Translate",
+                text = "UserActivity",
                 color = Color.White
             )
         }
@@ -212,7 +215,7 @@ fun HearingTestCard() {
 fun AppBar() {
     var drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
+    val context = LocalContext.current
     Box(modifier = Modifier.fillMaxSize().padding(top = 16.dp, bottom = 32.dp)) {
         if (drawerState.isOpen) {
             Box(
@@ -255,6 +258,20 @@ fun AppBar() {
                     )
                 }
             }
+            Icon(
+                imageVector = Icons.Filled.Person,
+                contentDescription = "User Icon",
+                modifier = Modifier
+                    .align(Alignment.TopEnd)  // Aligns the icon to the top-right corner
+                    .padding(16.dp)           // Adds padding from the top and right edges
+                    .size(32.dp)              // Sets the icon size
+                    .clickable {
+                        // Get the context inside the composable
+
+                        val intent = Intent(context, UserProfile::class.java)  // Navigate to UserProfile activity
+                        context.startActivity(intent)
+                    }
+            )
         }
     }
 }

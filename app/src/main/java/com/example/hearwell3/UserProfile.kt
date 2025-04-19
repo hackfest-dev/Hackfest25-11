@@ -6,9 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +17,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hearwell.ui.theme.HearWellTheme
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.hearwell.leftResultsGlobal
+import com.example.hearwell.rightResultsGlobal
+
+data class EarData(
+    val Left: List<String> = listOf(),
+    val Right: List<String> = listOf()
+)
 
 class UserProfile : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,23 +40,80 @@ class UserProfile : ComponentActivity() {
         }
     }
 }
+
 @Preview
 @Composable
 fun UserProfileScreen() {
     val db = FirebaseFirestore.getInstance()
+    val documentId = "Fp3EZY5gJsp41gOj7R5k"
 
     var name by remember { mutableStateOf("Loading...") }
     var age by remember { mutableStateOf(0) }
+    var earDataList by remember { mutableStateOf(listOf<EarData>()) }
 
-    val documentId = "Fp3EZY5gJsp41gOj7R5k" // Replace with actual document ID
-
-    LaunchedEffect(Unit) {
-        db.collection("users").document("Fp3EZY5gJsp41gOj7R5k")
+    fun fetchData() {
+        db.collection("users").document(documentId)
             .get()
             .addOnSuccessListener { document ->
                 if (document != null && document.exists()) {
                     name = document.getString("name") ?: "No Name"
                     age = document.getLong("age")?.toInt() ?: 0
+
+                    val rawList = document.get("earData") as? List<Map<String, List<String>>>
+                    val parsedList = rawList?.map {
+                        EarData(
+                            Left = it["Left"] ?: emptyList(),
+                            Right = it["Right"] ?: emptyList()
+                        )
+                    } ?: emptyList()
+
+                    earDataList = parsedList
+                }
+            }
+    }
+
+    LaunchedEffect(Unit) {
+        fetchData()
+    }
+
+    fun updatePreset4() {
+        db.collection("users").document(documentId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    val rawList = document.get("earData") as? List<Map<String, List<String>>>
+                    val existingList = rawList?.map {
+                        EarData(
+                            Left = it["Left"] ?: emptyList(),
+                            Right = it["Right"] ?: emptyList()
+                        )
+                    }?.toMutableList() ?: mutableListOf()
+
+                    val globalLeft = leftResultsGlobal.map { it?.toString() ?: "" }
+                    val globalRight = rightResultsGlobal.map { it?.toString() ?: "" }
+
+                    if (existingList.size >= 4) {
+                        existingList[3] = EarData(globalLeft, globalRight)
+                    } else {
+                        while (existingList.size < 4) {
+                            existingList.add(EarData(emptyList(), emptyList()))
+                        }
+                        existingList[3] = EarData(globalLeft, globalRight)
+                    }
+
+                    val updatedList = existingList.map {
+                        mapOf("Left" to it.Left, "Right" to it.Right)
+                    }
+
+                    db.collection("users").document(documentId)
+                        .update("earData", updatedList)
+                        .addOnSuccessListener {
+                            println("Preset 4 successfully updated.")
+                            fetchData() // Refresh UI
+                        }
+                        .addOnFailureListener {
+                            println("Failed to update Preset 4: $it")
+                        }
                 }
             }
     }
@@ -67,33 +129,35 @@ fun UserProfileScreen() {
         Text("Name: $name", fontSize = 24.sp, color = Color.Black, modifier = Modifier.padding(top = 40.dp))
         Spacer(modifier = Modifier.height(8.dp))
         Text("Age: $age", fontSize = 24.sp, color = Color.Black)
-
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Presets (Busy Areas):",
+            text = "Presets:",
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        // Box 1 - Preset 1: Mall
-        PresetBox(
-            title = "Preset 1 - Mall",
-            data = "50.0,50.0,50.0,50.0,50.0,50.0 | 50.0,50.0,50.0,50.0,50.0,50.0"
-        )
 
-        // Box 2 - Preset 2: Cafe
-        PresetBox(
-            title = "Preset 2 - Cafe",
-            data = "50.0,50.0,50.0,50.0,50.0,50.0 | 50.0,50.0,50.0,50.0,50.0,50.0"
-        )
+        if (earDataList.isNotEmpty()) {
+            earDataList.forEachIndexed { index, earData ->
+                PresetBox(
+                    title = "Preset ${index + 1}",
+                    data = "Left: ${earData.Left.joinToString(", ")}\nRight: ${earData.Right.joinToString(", ")}"
+                )
+            }
+        } else {
+            PresetBox(title = "No Presets", data = "No data found.")
+        }
 
-        // Box 3 - Preset 3 (empty)
-        PresetBox(title = "Preset 3", data = "Not configured")
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Box 4 - Preset 4 (empty)
-        PresetBox(title = "Preset 4", data = "Not configured")
+        Button(
+            onClick = { updatePreset4() },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Update Preset 4 from Global")
+        }
     }
 }
 
@@ -111,4 +175,3 @@ fun PresetBox(title: String, data: String) {
         Text(text = data, color = Color.White, fontSize = 14.sp)
     }
 }
-

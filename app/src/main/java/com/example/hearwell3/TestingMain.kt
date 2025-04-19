@@ -37,6 +37,8 @@ import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.sin
 import com.example.hearwell.ui.theme.HearWellTheme
+import com.example.hearwell.leftResultsGlobal
+import com.example.hearwell.rightResultsGlobal
 
 class TestingMain : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,8 +58,8 @@ fun TestingMainScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val activity = context as? Activity
 
-    var leftResults by remember { mutableStateOf(List(frequencies.size) { null as Float? }) }
-    var rightResults by remember { mutableStateOf(List(frequencies.size) { null as Float? }) }
+    var leftResults by remember { mutableStateOf(leftResultsGlobal) }
+    var rightResults by remember { mutableStateOf(rightResultsGlobal) }
 
     var currentEar by remember { mutableStateOf("left") }
     var phase by remember { mutableStateOf("select") }
@@ -138,12 +140,15 @@ fun TestingMainScreen(modifier: Modifier = Modifier) {
                             val volumeDb = sliderToDb(currentVolume)
                             if (currentEar == "left") {
                                 leftResults = leftResults.toMutableList().also { it[selectedIndex!!] = volumeDb }
+                                leftResultsGlobal = leftResults
                             } else {
                                 rightResults = rightResults.toMutableList().also { it[selectedIndex!!] = volumeDb }
+                                rightResultsGlobal = rightResults
                             }
                             selectedIndex = null
                             phase = "select"
                         }
+
                     )
                 }
             }

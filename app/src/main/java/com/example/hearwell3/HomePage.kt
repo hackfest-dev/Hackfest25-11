@@ -31,7 +31,6 @@ import com.example.hearwell.ui.theme.HearWellTheme
 import customFont
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
-import org.apache.commons.math3.geometry.spherical.twod.Circle
 import kotlin.jvm.java
 
 class HomePage : ComponentActivity() {

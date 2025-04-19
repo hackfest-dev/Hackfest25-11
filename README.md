@@ -35,7 +35,8 @@ Clone this repository:
 ```bash
 git clone https://github.com/yourusername/HearWell.git
 ```
-
+```bash
+Project Structure
 com.hearwell.aid               # Root Package
 |
 ├── audio                      # Audio processing logic using AAudio/Oboe
@@ -58,3 +59,4 @@ com.hearwell.aid               # Root Package
 │   └── Colors, Typography, etc.
 |
 └── MainActivity               # Main launcher activity
+```
